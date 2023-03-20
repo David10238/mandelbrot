@@ -1,42 +1,38 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 
-#include "src/complex.h"
-
-constexpr int WIDTH = 800;
-constexpr int HEIGHT = 800;
-constexpr double WIDTH_VAL = 1.0;
-constexpr double HEIGHT_VAL = 1.0;
+#include "src/constants.h"
+#include "src/julia.h"
 
 int main()
 {
-    if(SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-        std::cout << "Failed to initialize the SDL2 library\n";
-        return -1;
+    SDL_Event event;
+    SDL_Renderer *renderer;
+    SDL_Window *window;
+
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_CreateWindowAndRenderer(SIZE_PIXELS, SIZE_PIXELS, 0, &window, &renderer);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+
+    for(int x = 0; x < SIZE_PIXELS; x++){
+        for(int y = 0; y < SIZE_PIXELS; y++){
+            const std::complex pixel = pixelToComplex(x, y);
+
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            if(inJuliaSet(std::complex<double>(-1, 0), pixel)){
+                SDL_RenderDrawPoint(renderer, x, y);
+            }
+        }   
     }
 
-    SDL_Window *window = SDL_CreateWindow("SDL2 Window",
-                                          SDL_WINDOWPOS_CENTERED,
-                                          SDL_WINDOWPOS_CENTERED,
-                                          WIDTH, HEIGHT,
-                                          0);
-
-    if(!window)
-    {
-        std::cout << "Failed to create window\n";
-        return -1;
+    SDL_RenderPresent(renderer);
+    while (1) {
+        if (SDL_PollEvent(&event) && event.type == SDL_QUIT)
+            break;
     }
-
-    SDL_Surface *window_surface = SDL_GetWindowSurface(window);
-
-    if(!window_surface)
-    {
-        std::cout << "Failed to get the surface from the window\n";
-        return -1;
-    } 
-
-    SDL_UpdateWindowSurface(window);
-
-    SDL_Delay(5000);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return EXIT_SUCCESS;
 }
